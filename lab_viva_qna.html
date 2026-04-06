@@ -1,0 +1,180 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.container { padding: 1rem 0; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.tab { padding: 7px 13px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-secondary); font-size: 13px; cursor: pointer; transition: all 0.15s; }
+.tab.active { background: var(--color-background-secondary); color: var(--color-text-primary); border-color: var(--color-border-primary); font-weight: 500; }
+.tab:hover:not(.active) { background: var(--color-background-secondary); }
+.exp-panel { display: none; }
+.exp-panel.active { display: block; }
+.exp-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+.exp-subtitle { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 1.25rem; }
+.q-card { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); margin-bottom: 10px; overflow: hidden; }
+.q-header { padding: 12px 16px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; background: var(--color-background-primary); }
+.q-header:hover { background: var(--color-background-secondary); }
+.q-num { font-size: 12px; font-weight: 500; color: var(--color-text-info); background: var(--color-background-info); border-radius: 4px; padding: 2px 7px; flex-shrink: 0; margin-top: 1px; }
+.q-text { font-size: 14px; color: var(--color-text-primary); flex: 1; line-height: 1.5; }
+.q-arrow { color: var(--color-text-tertiary); font-size: 13px; flex-shrink: 0; transition: transform 0.2s; margin-top: 1px; }
+.q-answer { display: none; padding: 12px 16px 14px; background: var(--color-background-secondary); border-top: 0.5px solid var(--color-border-tertiary); font-size: 13.5px; color: var(--color-text-secondary); line-height: 1.7; }
+.q-answer.open { display: block; }
+.q-arrow.open { transform: rotate(90deg); }
+.formula { font-family: var(--font-mono); font-size: 12.5px; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: 4px; padding: 6px 10px; margin: 6px 0; display: inline-block; color: var(--color-text-primary); }
+.tip { background: var(--color-background-info); border-left: 3px solid var(--color-border-info); padding: 8px 12px; border-radius: 0 4px 4px 0; font-size: 13px; color: var(--color-text-info); margin-top: 8px; }
+</style>
+
+<div class="container">
+<div class="tabs">
+  <div class="tab active" onclick="showExp(0)">Exp 1: Modulus of Rigidity</div>
+  <div class="tab" onclick="showExp(1)">Exp 2: Spring Constant</div>
+  <div class="tab" onclick="showExp(2)">Exp 6: Galvanometer</div>
+  <div class="tab" onclick="showExp(3)">Exp 11: Gravity (g)</div>
+</div>
+
+<div id="exp0" class="exp-panel active">
+  <p class="exp-title">Experiment 1 — Modulus of Rigidity (Dynamic Method)</p>
+  <p class="exp-subtitle">Torsional oscillations of a wire-suspended cylinder</p>
+</div>
+<div id="exp1" class="exp-panel">
+  <p class="exp-title">Experiment 2 — Spring Constant & Effective Mass</p>
+  <p class="exp-subtitle">Spiral spring under static and dynamic loading</p>
+</div>
+<div id="exp2" class="exp-panel">
+  <p class="exp-title">Experiment 6 — Galvanometer Resistance (Half-Deflection Method)</p>
+  <p class="exp-subtitle">Measuring internal resistance of a galvanometer</p>
+</div>
+<div id="exp3" class="exp-panel">
+  <p class="exp-title">Experiment 11 — Acceleration due to Gravity</p>
+  <p class="exp-subtitle">Compound pendulum method</p>
+</div>
+
+<div id="qlist"></div>
+</div>
+
+<script>
+const data = [
+  {
+    qs: [
+      {q:"What is the modulus of rigidity (η)?", a:"It is the ratio of shearing stress to shearing strain within the elastic limit. It measures how resistant a material is to shear deformation. Unit: dynes/cm² or N/m²."},
+      {q:"What is a torsional pendulum?", a:"A rigid body (cylinder) suspended by a wire that executes angular oscillations about the wire's axis when twisted and released. The restoring force is the torsional couple of the wire."},
+      {q:"Write the formula used to calculate η in this experiment.", a:'<span class="formula">η = 8πIl / (T²r⁴)</span> where I = moment of inertia of cylinder, l = length of wire, T = time period, r = radius of wire.'},
+      {q:"Why is the motion called simple harmonic?", a:"Because the restoring torsional couple is directly proportional to the angle of twist (θ), just like SHM requires restoring force ∝ displacement. The equation is: Cθ = (ηπr⁴/2l)θ."},
+      {q:"What is the moment of inertia of the cylindrical bar used?", a:'<span class="formula">I = ½Ma²</span> where M is the mass and a is the radius of the cylinder.'},
+      {q:"Why do we measure the time for 30 oscillations instead of 1?", a:"To reduce the percentage error in time measurement. Stopwatch errors get divided by 30, giving a much more accurate value of the time period T."},
+      {q:"What is the vernier constant (V.C.) of the slide calipers?", a:'<span class="formula">V.C. = (Value of 1 main scale division) / (Total vernier divisions)</span> Typically 0.01 cm for a standard vernier caliper.'},
+      {q:"What is the least count (L.C.) of the screw gauge?", a:'<span class="formula">L.C. = Pitch / Total circular scale divisions</span> Typically 0.001 cm (0.01 mm).'},
+      {q:"Why is the wire radius (r) raised to the power 4 in the formula?", a:"Because the torsional rigidity of a wire depends on its cross-sectional geometry. Mathematically, the torsional couple C = ηπr⁴/2l — the r⁴ arises from the polar second moment of area of a circular cross-section."},
+      {q:"What precautions should be taken in this experiment?", a:"(1) Twist should be small so motion stays SHM. (2) Wire should be uniform and free from kinks. (3) Oscillations should be in horizontal plane only. (4) Multiple readings for T should be averaged."},
+      {q:"What is the standard value of η for steel?", a:"8.4 × 10¹¹ dynes/cm². Your experimental value is compared to this to find the percentage error."},
+      {q:"What does the torsional couple C depend on?", a:'<span class="formula">C = ηπr⁴ / 2l</span> It depends on the material (η), radius of wire (r), and length of wire (l). A thicker or shorter wire has a larger C (stiffer).'},
+      {q:"Why is it called the 'dynamic method'?", a:"Because the modulus of rigidity is determined from the dynamics (oscillation/time period) of the system, rather than from a static measurement of twist angle under a known torque."},
+      {q:"What happens to the time period if the length of the wire is doubled?", a:"Since T ∝ √l, doubling l increases T by a factor of √2 ≈ 1.414. The oscillations become slower."},
+      {q:"What is the relationship between time period T and the moment of inertia I?", a:"T ∝ √I — increasing the mass or radius of the cylinder increases I and hence increases T, making the system oscillate more slowly."}
+    ]
+  },
+  {
+    qs: [
+      {q:"What is Hooke's Law and how does it apply here?", a:"Hooke's Law states that extension is proportional to applied force within elastic limit: F = kl. Here, the weight of the load (m₀g) causes extension l in the spring, so k = m₀g/l."},
+      {q:"What is the spring constant (k) and what does it represent?", a:"k is the force required to produce unit extension. It represents the stiffness of the spring. Unit: dynes/cm or N/m. A larger k means a stiffer spring."},
+      {q:"Why is the spring's own mass important in oscillation but not in the static (extension) case?", a:"In static loading, the spring's own weight only shifts the equilibrium position — it doesn't affect the extension due to the load. But in oscillation, parts of the spring also move, contributing to kinetic energy and hence the effective period."},
+      {q:"What is the effective mass (m') of a spring?", a:'<span class="formula">m\' = ms/3</span> where ms is the actual mass of the spring. Only one-third of the spring\'s mass effectively participates in oscillation because different parts of the spring move with different velocities.'},
+      {q:"Derive the expression for effective mass.", a:"Using kinetic energy: Ek = ∫½v²dm over the spring length. With v = (y/L)v₀ and dm = (ms/L)dy, integrating gives Ek = ½(ms/3)v₀². So m' = ms/3."},
+      {q:"What is the formula for the time period of the spring-mass system?", a:'<span class="formula">T = 2π√((m₀ + ms/3)/k)</span> This accounts for the effective mass of the spring.'},
+      {q:"How do you find k from Graph-1?", a:'Slope of extension vs load graph = dl/dm₀. Then: <span class="formula">k = g / Slope = 981 / Slope dynes/cm</span>'},
+      {q:"How do you find the effective mass from Graph-2?", a:"Plot T² vs m₀. The line, when extrapolated, cuts the negative m₀ axis at a point m' (x-intercept). This gives the effective mass of the spring."},
+      {q:"Why does the T² vs m₀ graph not pass through the origin?", a:"Because the spring itself has mass. The intercept on the m₀ axis equals the negative of the effective mass (−ms/3), accounting for the spring's own contribution to kinetic energy."},
+      {q:"What is the unit of the spring constant in CGS and SI?", a:"CGS: dynes/cm. SI: N/m. Note: 1 N/m = 1000 dynes/cm."},
+      {q:"Why must the oscillations be along the vertical axis only?", a:"To ensure only the spring's elastic restoring force acts. Lateral oscillations would introduce additional forces and give inaccurate results."},
+      {q:"What precautions are taken in this experiment?", a:"(1) Load should be added gently. (2) Spring should not exceed elastic limit. (3) Oscillation amplitude should be small. (4) Time for 20 oscillations should be measured multiple times."},
+      {q:"What would happen if the spring is stretched beyond its elastic limit?", a:"Hooke's Law would no longer apply. The extension vs load graph would no longer be linear, and the spring would be permanently deformed. k cannot be accurately determined."},
+      {q:"Why is the time measured for 20 oscillations and not just 1?", a:"To minimize timing errors. The error in one measurement of T is reduced by a factor of 20 when the time for 20 oscillations is measured and then divided."}
+    ]
+  },
+  {
+    qs: [
+      {q:"What is a galvanometer?", a:"A galvanometer is a sensitive instrument used to detect and measure small electric currents. It works on the principle that a current-carrying conductor in a magnetic field experiences a force (torque)."},
+      {q:"What is the half-deflection method?", a:"A method to find the galvanometer's resistance (RG) by introducing a series resistance R₁ until the deflection drops to exactly half of the original deflection. At this point, RG = R₁."},
+      {q:"Derive RG = R₁ from first principles.", a:'Initial current: Cg = V/RG = kd. After introducing R₁: C\'g = V/(RG+R₁) = k(d/2). Dividing: (RG+R₁)/RG = 2, so RG + R₁ = 2RG → <span class="formula">RG = R₁</span>'},
+      {q:"Why must the shunt resistance S be very small compared to RG?", a:"So that the potential difference V across the shunt remains nearly constant regardless of R₁. If S were large, changing R₁ would significantly change V, invalidating the assumption used in the derivation."},
+      {q:"What is the role of the shunt resistance S?", a:"S limits the current through the galvanometer to a safe level and maintains a nearly constant voltage across the galvanometer branch for all values of R₁."},
+      {q:"What is the purpose of the large resistance R in the battery circuit?", a:"R limits the total current from the battery, protecting the galvanometer from excessive current and stabilizing the circuit."},
+      {q:"Why is the current reversed using a commutator K?", a:"To take readings in both directions and average them, eliminating the effect of any zero error or asymmetry in the galvanometer scale."},
+      {q:"What is the galvanometer constant k?", a:"k relates deflection to current: C = kd. It depends on the galvanometer's sensitivity. In this experiment, k cancels out in the derivation so we don't need its value."},
+      {q:"What is meant by 'zero point' galvanometer?", a:"A galvanometer whose pointer rests at the center (zero) of the scale when no current flows. It can show deflections in both directions, which is useful for detecting current direction."},
+      {q:"What would happen if S is not much smaller than RG?", a:"The voltage V across S would change significantly when R₁ is varied, breaking the key assumption of the method. The result RG = R₁ would no longer hold, giving an inaccurate measurement."},
+      {q:"What is the significance of taking multiple readings?", a:"Multiple readings with different values of R and S, and in both current directions, reduce random errors and give a more reliable mean value of RG."},
+      {q:"Can this method be used for any type of resistance measurement?", a:"It specifically measures the internal resistance of a galvanometer. Similar half-deflection principles can be adapted for other resistances, but the specific circuit configuration here is designed for galvanometers."},
+      {q:"What is meant by 'deflection d' in this context?", a:"d is the displacement of the light spot on the scale, proportional to the current through the galvanometer. It directly indicates the galvanometer current via C = kd."},
+      {q:"What is the connecting formula used in this experiment?", a:'<span class="formula">RG = R₁</span> where R₁ is the resistance introduced in the galvanometer circuit to reduce deflection to exactly half.'},
+      {q:"List the apparatus required for this experiment.", a:"Zero-point galvanometer, shunt box (S), resistances R and R₁, commutator (K), cell (E), and connecting wires."}
+    ]
+  },
+  {
+    qs: [
+      {q:"What is a compound pendulum?", a:"A compound (physical) pendulum is a rigid body of any shape capable of oscillating freely about a horizontal axis passing through it. Unlike a simple pendulum, its mass is distributed along its length."},
+      {q:"What is the formula for the time period of a compound pendulum?", a:'<span class="formula">T = 2π√(I/Mgh)</span> where I = moment of inertia about suspension axis, M = mass, h = distance from suspension to center of mass.'},
+      {q:"What is the equivalent simple pendulum length L?", a:'<span class="formula">L = (h² + K²)/h</span> where K is the radius of gyration and h is the distance from suspension point to center of mass.'},
+      {q:"How is g calculated from this experiment?", a:'From T = 2π√(L/g): <span class="formula">g = 4π²L/T²</span> where L is the equivalent length from the graph and T is the corresponding time period.'},
+      {q:"What is the parallel axis theorem?", a:'<span class="formula">I = IG + Mh²</span> where IG = moment of inertia about center of mass, M = mass, h = distance between the two parallel axes.'},
+      {q:"What is the radius of gyration K?", a:"K is the distance from the axis of rotation at which the entire mass of the body could be concentrated to give the same moment of inertia. IG = MK²."},
+      {q:"How do you plot the graph for this experiment?", a:"Plot time period T (y-axis) against distance of holes from one end d (x-axis). A characteristic double-peaked curve symmetric about the CG is obtained. A horizontal line (constant T) intersects this curve at 4 points."},
+      {q:"How is the equivalent length L found from the graph?", a:"Draw a horizontal line at a chosen T value. It intersects the two curves at 4 points: A, B, D, E. Measure AD and BE. L = (AD + BE)/2 as they represent h₁+h₂ for the two pairs."},
+      {q:"Why does the time period become very large near the center of gravity?", a:"As h → 0 (suspension near CG), the gravitational torque (Mgh) → 0, making the restoring force negligible. T = 2π√(I/Mgh) → ∞ as h → 0."},
+      {q:"What is the center of percussion?", a:"For a compound pendulum, the center of oscillation is the point at distance L from the pivot. If the bar were pivoted at the center of oscillation, the time period would be the same. These two points (pivot and center of oscillation) are called conjugate points."},
+      {q:"Why is the bar inverted and readings taken from both ends?", a:"To obtain two symmetrical curves on the T-vs-d graph. The intersection of a horizontal line with both curves gives pairs of conjugate points, allowing calculation of L accurately."},
+      {q:"Why must the oscillation amplitude be kept small (within 4°)?", a:"The formula T = 2π√(L/g) is derived assuming small angles. For large angles, the actual period is longer and the simple pendulum formula is no longer valid."},
+      {q:"What is the relation between L, h₁, and h₂?", a:'<span class="formula">L = h₁ + h₂</span> and <span class="formula">K = √(h₁h₂)</span> where h₁ and h₂ are the distances of the two conjugate points from the CG.'},
+      {q:"What apparatus is used in this experiment?", a:"A bar pendulum, small metal wedge, beam compass, spirit level, telescope with crosswires, stopwatch, and a wooden prism with metal edge."},
+      {q:"What is the percentage error formula used here?", a:'<span class="formula">% Error = |Actual value − Experimental value| / Actual value × 100%</span> Standard g = 980 cm/s² (or 9.8 m/s²).'},
+      {q:"Why is a telescope used to observe oscillations?", a:"To precisely observe the position of the vertical mark on the bar from a distance without parallax error, ensuring accurate timing of oscillations."}
+    ]
+  }
+];
+
+let currentExp = 0;
+let openIndex = -1;
+
+function showExp(i) {
+  currentExp = i;
+  openIndex = -1;
+  document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('active', i===j));
+  document.querySelectorAll('.exp-panel').forEach((p,j) => p.classList.toggle('active', i===j));
+  renderQs();
+}
+
+function renderQs() {
+  const qs = data[currentExp].qs;
+  let html = qs.map((item, i) => `
+    <div class="q-card">
+      <div class="q-header" onclick="toggle(${i})">
+        <span class="q-num">Q${i+1}</span>
+        <span class="q-text">${item.q}</span>
+        <span class="q-arrow" id="arr${i}">▶</span>
+      </div>
+      <div class="q-answer" id="ans${i}">${item.a}</div>
+    </div>
+  `).join('');
+  document.getElementById('qlist').innerHTML = html;
+}
+
+function toggle(i) {
+  const ans = document.getElementById('ans'+i);
+  const arr = document.getElementById('arr'+i);
+  if (openIndex === i) {
+    ans.classList.remove('open');
+    arr.classList.remove('open');
+    openIndex = -1;
+  } else {
+    if (openIndex >= 0) {
+      document.getElementById('ans'+openIndex).classList.remove('open');
+      document.getElementById('arr'+openIndex).classList.remove('open');
+    }
+    ans.classList.add('open');
+    arr.classList.add('open');
+    openIndex = i;
+  }
+}
+
+renderQs();
+</script>
